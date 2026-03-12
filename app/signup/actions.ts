@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
 import { claimRoleInvitesSafe } from '@/app/lib/server/claim-invites'
@@ -131,6 +132,7 @@ export async function signup(formData: FormData) {
     await syncProfileRoleFromMetadata(data.user)
   }
   await claimRoleInvitesSafe()
+  revalidatePath('/', 'layout')
 
   redirect(safeRedirectPath)
 }

@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/app/lib/supabase/server'
 import { claimRoleInvitesSafe } from '@/app/lib/server/claim-invites'
@@ -114,6 +115,7 @@ export async function login(formData: FormData) {
   }
 
   await claimRoleInvitesSafe()
+  revalidatePath('/', 'layout')
 
   redirect(getSafeRedirectPath(redirectedFrom || '/dashboard'))
 }

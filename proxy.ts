@@ -11,7 +11,7 @@ function copyResponseCookies(from: NextResponse, to: NextResponse) {
 export { isPublicRoute }
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next({
+  let response = NextResponse.next({
     request: { headers: request.headers },
   })
   const pathname = request.nextUrl.pathname
@@ -45,6 +45,14 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
+          })
+
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          })
+
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options)
           })
