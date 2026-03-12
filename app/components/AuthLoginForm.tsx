@@ -56,10 +56,42 @@ export default function AuthLoginForm({
     setMessage('')
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setMessage(mapSignInError(error.message))
+      return
+    }
+
+    const accessToken = String(data.session?.access_token ?? '').trim()
+    const refreshToken = String(data.session?.refresh_token ?? '').trim()
+
+    if (!accessToken || !refreshToken) {
+      setMessage('Sign-in succeeded but no session was returned. Please try again.')
+      return
+    }
+
+    const sessionResponse = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      }),
+      credentials: 'same-origin',
+    })
+
+    let sessionBody: { ok?: boolean; error?: string } | null = null
+    try {
+      sessionBody = (await sessionResponse.json()) as { ok?: boolean; error?: string }
+    } catch {
+      sessionBody = null
+    }
+
+    if (!sessionResponse.ok || !sessionBody?.ok) {
+      setMessage(sessionBody?.error || 'Unable to establish a server session. Please try again.')
       return
     }
 

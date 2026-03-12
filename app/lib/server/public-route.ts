@@ -2,6 +2,7 @@ export function isPublicRoute(pathname: string) {
   return (
     pathname === '/' ||
     pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/auth/session') ||
     pathname.startsWith('/auth/confirm') ||
     pathname.startsWith('/auth/set-password') ||
     pathname.startsWith('/login') ||
