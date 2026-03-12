@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { login } from '@/app/login/actions'
+import AuthLoginForm from '@/app/components/AuthLoginForm'
 
 export default async function AdminLoginPage({
   searchParams,
@@ -30,23 +30,7 @@ export default async function AdminLoginPage({
         ) : null}
         {params?.message ? <p className="notice">{params.message}</p> : null}
 
-        <form action={login} className="form-grid">
-          <input type="hidden" name="redirectedFrom" value={redirectedFrom} />
-
-          <div>
-            <label htmlFor="email">Email address</label>
-            <input id="email" name="email" type="email" required placeholder="admin@cdlprotect.com" />
-          </div>
-
-          <div>
-            <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" required placeholder="********" />
-          </div>
-
-          <button type="submit" className="primary">
-            Sign In
-          </button>
-        </form>
+        <AuthLoginForm redirectedFrom={redirectedFrom} emailPlaceholder="admin@cdlprotect.com" />
 
         <p style={{ margin: '14px 0 0 0', fontSize: 14 }}>
           Need access? Contact your platform owner.

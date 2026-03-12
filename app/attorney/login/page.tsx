@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { login } from '@/app/login/actions'
+import AuthLoginForm from '@/app/components/AuthLoginForm'
 
 export default async function AttorneyLoginPage({
   searchParams,
@@ -31,30 +31,11 @@ export default async function AttorneyLoginPage({
         ) : null}
         {params?.message ? <p className="notice">{params.message}</p> : null}
 
-        <form action={login} className="form-grid">
-          <input type="hidden" name="redirectedFrom" value={redirectedFrom} />
-
-          <div>
-            <label htmlFor="email">Email address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              placeholder="attorney@firm.com"
-              defaultValue={prefillEmail}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password">Password</label>
-            <input id="password" name="password" type="password" required placeholder="********" />
-          </div>
-
-          <button type="submit" className="primary">
-            Sign In
-          </button>
-        </form>
+        <AuthLoginForm
+          redirectedFrom={redirectedFrom}
+          prefillEmail={prefillEmail}
+          emailPlaceholder="attorney@firm.com"
+        />
 
         <p style={{ margin: '14px 0 0 0', fontSize: 14 }}>
           Need an invite? Contact CDL Protect Admin.
