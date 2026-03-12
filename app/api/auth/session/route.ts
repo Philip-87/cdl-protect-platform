@@ -1,10 +1,28 @@
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { applyServerStorage, createStorageFromOptions } from '@supabase/ssr/dist/main/cookies'
 
 type SessionPayload = {
   access_token: string
   refresh_token: string
+}
+
+function createResponseCookieBuffer() {
+  const responseCookies: Array<{
+    name: string
+    value: string
+    options?: Parameters<NextResponse['cookies']['set']>[2]
+  }> = []
+
+  return {
+    responseCookies,
+    setAll(nextCookies: Array<{ name: string; value: string; options?: Parameters<NextResponse['cookies']['set']>[2] }>) {
+      nextCookies.forEach(({ name, value, options }) => {
+        responseCookies.push({ name, value, options })
+      })
+    },
+  }
 }
 
 export async function POST(request: Request) {
@@ -25,22 +43,37 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    const responseCookies: Array<{
-      name: string
-      value: string
-      options?: Parameters<NextResponse['cookies']['set']>[2]
-    }> = []
+    const buffered = createResponseCookieBuffer()
 
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
+    const storageState = createStorageFromOptions(
+      {
+        cookieEncoding: 'base64url',
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(nextCookies) {
+            nextCookies.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+            buffered.setAll(nextCookies)
+          },
         },
-        setAll(nextCookies) {
-          nextCookies.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-            responseCookies.push({ name, value, options })
-          })
+      },
+      true
+    )
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        flowType: 'pkce',
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        persistSession: true,
+        storage: storageState.storage,
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'cdl-protect/auth-session-route',
         },
       },
     })
@@ -54,8 +87,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 400 })
     }
 
+    await applyServerStorage(
+      {
+        getAll: storageState.getAll,
+        setAll: storageState.setAll,
+        setItems: storageState.setItems,
+        removedItems: storageState.removedItems,
+      },
+      {
+        cookieEncoding: 'base64url',
+        cookieOptions: null,
+      }
+    )
+
     const response = NextResponse.json({ ok: true })
-    responseCookies.forEach(({ name, value, options }) => {
+    buffered.responseCookies.forEach(({ name, value, options }) => {
       response.cookies.set(name, value, options)
     })
 
