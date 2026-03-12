@@ -1,0 +1,33 @@
+{
+  "name": "cdl-protect-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "env:check": "node scripts/check-env.mjs",
+    "test": "node --test tests/ocr-preview-handler.test.mts tests/ocr-preview-token.test.mts tests/calendar-sync-crypto.test.mts tests/cron-worker-handler.test.mts tests/proxy-public-routes.test.mts tests/fleet-access-schema-drift.test.mts tests/case-display-helpers.test.mts tests/ui-visual-contracts.test.mts tests/admin-custom-role-helpers.test.mts tests/role-feature-helpers.test.mts tests/driver-workspace-guards.test.mts tests/county-matching.test.mts tests/geocode-route-matrix.test.mts tests/payment-helpers.test.mts",
+    "typecheck": "tsc --noEmit --incremental false",
+    "worker:run": "node scripts/run-worker.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
