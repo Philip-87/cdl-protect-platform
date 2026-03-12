@@ -61,15 +61,15 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  let user = null
+  let session = null
   try {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
+    const { data } = await supabase.auth.getSession()
+    session = data.session
   } catch (error) {
-    console.error('Error getting user:', error)
+    console.error('Error getting session:', error)
   }
 
-  if (!user && !isPublicRoute(pathname)) {
+  if (!session && !isPublicRoute(pathname)) {
     const url = request.nextUrl.clone()
     if (pathname.startsWith('/attorney')) {
       url.pathname = '/attorney/login'
@@ -87,7 +87,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (
-    user &&
+    session &&
     (pathname.startsWith('/login') ||
       pathname.startsWith('/signup') ||
       pathname.startsWith('/attorney/login') ||
