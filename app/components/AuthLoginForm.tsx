@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/app/lib/supabase/client'
 
 function getSafeRedirectPath(rawPath: string) {
   if (!rawPath.startsWith('/')) {
@@ -41,7 +40,7 @@ export default function AuthLoginForm({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting) return
 
@@ -55,19 +54,27 @@ export default function AuthLoginForm({
     setError('')
 
     try {
-      const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: nextEmail,
-        password,
+      const formData = new FormData()
+      formData.set('email', nextEmail)
+      formData.set('password', password)
+      formData.set('redirectedFrom', redirectedFrom)
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
       })
 
-      if (signInError) {
-        setError(mapSignInError(signInError.message))
+      const result = (await response.json()) as { ok?: boolean; error?: string; redirectTo?: string }
+
+      if (!response.ok || !result.ok) {
+        setError(mapSignInError(String(result.error ?? 'Unable to sign in right now.')))
         setSubmitting(false)
         return
       }
 
-      window.location.assign(getSafeRedirectPath(redirectedFrom || '/dashboard'))
+      const redirectTarget = result.redirectTo ?? redirectedFrom ?? '/dashboard'
+      window.location.assign(getSafeRedirectPath(String(redirectTarget)))
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to sign in right now.')
       setSubmitting(false)
