@@ -9,5 +9,8 @@ tmp
 tsconfig.tsbuildinfo
 .DS_Store
 Thumbs.db
+<<<<<<< HEAD
 supabase/.temp
 supabase/.branches
+=======
+>>>>>>> 822247285af01b1954ee15f036b5830cb675a79e
