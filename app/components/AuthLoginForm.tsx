@@ -54,16 +54,30 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     setError('')
 
     try {
-      const formData = new FormData()
-      formData.set('email', nextEmail)
-      formData.set('password', password)
-      formData.set('redirectedFrom', redirectedFrom)
-
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          email: nextEmail,
+          password,
+          redirectedFrom,
+        }),
         credentials: 'same-origin',
       })
+
+      const contentType = String(response.headers.get('content-type') ?? '')
+      if (!/application\/json/i.test(contentType)) {
+        const text = await response.text()
+        const summary = response.redirected
+          ? `Login request redirected to ${response.url}`
+          : `Login endpoint returned ${response.status} ${response.statusText || 'response'}`
+        setError(`${summary}. ${text.slice(0, 120)}`.trim())
+        setSubmitting(false)
+        return
+      }
 
       const result = (await response.json()) as { ok?: boolean; error?: string; redirectTo?: string }
 

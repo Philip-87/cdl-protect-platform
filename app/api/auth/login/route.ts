@@ -27,67 +27,93 @@ function mapSignInError(message: string) {
 }
 
 export async function POST(request: Request) {
-  const supabaseUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim()
-  const supabaseKey = String(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim()
+  try {
+    const supabaseUrl = String(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim()
+    const supabaseKey = String(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim()
 
-  if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Supabase URL and Key are required.',
+        },
+        { status: 500 }
+      )
+    }
+
+    let body: Record<string, unknown>
+    try {
+      body = (await request.json()) as Record<string, unknown>
+    } catch {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Invalid login payload.',
+        },
+        { status: 400 }
+      )
+    }
+
+    const email = String(body.email ?? '').trim()
+    const password = String(body.password ?? '')
+    const redirectedFrom = getSafeRedirectPath(String(body.redirectedFrom ?? '').trim() || '/dashboard')
+
+    if (!email || !password) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Email and password are required.',
+        },
+        { status: 400 }
+      )
+    }
+
+    let response = NextResponse.json({
+      ok: true,
+      redirectTo: redirectedFrom,
+    })
+
+    const cookieStore = await cookies()
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    })
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: mapSignInError(error.message),
+        },
+        { status: 400 }
+      )
+    }
+
+    return response
+  } catch (error) {
     return NextResponse.json(
       {
         ok: false,
-        error: 'Supabase URL and Key are required.',
+        error: error instanceof Error ? error.message : 'Unable to sign in right now.',
       },
       { status: 500 }
     )
   }
+}
 
-  const formData = await request.formData()
-  const email = String(formData.get('email') ?? '').trim()
-  const password = String(formData.get('password') ?? '')
-  const redirectedFrom = getSafeRedirectPath(String(formData.get('redirectedFrom') ?? '').trim() || '/dashboard')
-
-  if (!email || !password) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'Email and password are required.',
-      },
-      { status: 400 }
-    )
-  }
-
-  let response = NextResponse.json({
-    ok: true,
-    redirectTo: redirectedFrom,
-  })
-
-  const cookieStore = await cookies()
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll()
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options)
-        })
-      },
-    },
-  })
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: mapSignInError(error.message),
-      },
-      { status: 400 }
-    )
-  }
-
-  return response
+export async function GET() {
+  return NextResponse.json({ ok: true, route: 'auth-login' })
 }
