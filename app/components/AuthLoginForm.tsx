@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import type { FormEvent } from 'react'
+import { useState, useTransition } from 'react'
+import { createClient } from '@/app/lib/supabase/client'
 
 function getSafeRedirectPath(rawPath: string) {
   if (!rawPath.startsWith('/')) {
@@ -35,68 +37,46 @@ export default function AuthLoginForm({
   prefillEmail?: string
   emailPlaceholder: string
 }) {
-  const [email, setEmail] = useState(prefillEmail)
-  const [password, setPassword] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [isPending, startTransition] = useTransition()
 
-async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (submitting) return
 
-    const nextEmail = email.trim()
-    if (!nextEmail || !password) {
-      setError('Email and password are required.')
+    const formData = new FormData(event.currentTarget)
+    const email = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+    const target = getSafeRedirectPath(redirectedFrom || '/dashboard')
+
+    if (!email || !password) {
+      setMessage('Email and password are required.')
       return
     }
 
-    setSubmitting(true)
-    setError('')
+    setMessage('')
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json',
-        },
-        body: JSON.stringify({
-          email: nextEmail,
-          password,
-          redirectedFrom,
-        }),
-        credentials: 'same-origin',
-      })
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-      const contentType = String(response.headers.get('content-type') ?? '')
-      if (!/application\/json/i.test(contentType)) {
-        const text = await response.text()
-        const summary = response.redirected
-          ? `Login request redirected to ${response.url}`
-          : `Login endpoint returned ${response.status} ${response.statusText || 'response'}`
-        setError(`${summary}. ${text.slice(0, 120)}`.trim())
-        setSubmitting(false)
-        return
-      }
-
-      const result = (await response.json()) as { ok?: boolean; error?: string; redirectTo?: string }
-
-      if (!response.ok || !result.ok) {
-        setError(mapSignInError(String(result.error ?? 'Unable to sign in right now.')))
-        setSubmitting(false)
-        return
-      }
-
-      const redirectTarget = result.redirectTo ?? redirectedFrom ?? '/dashboard'
-      window.location.assign(getSafeRedirectPath(String(redirectTarget)))
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Unable to sign in right now.')
-      setSubmitting(false)
+    if (error) {
+      setMessage(mapSignInError(error.message))
+      return
     }
+
+    window.location.assign(target)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-grid">
+    <form
+      onSubmit={(event) => {
+        startTransition(() => {
+          void handleSubmit(event)
+        })
+      }}
+      className="form-grid"
+    >
+      <input type="hidden" name="redirectedFrom" value={redirectedFrom} />
+
       <div>
         <label htmlFor="email">Email address</label>
         <input
@@ -106,9 +86,8 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
           required
           placeholder={emailPlaceholder}
           autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          disabled={submitting}
+          defaultValue={prefillEmail}
+          disabled={isPending}
         />
       </div>
 
@@ -121,16 +100,15 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
           required
           placeholder="********"
           autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          disabled={submitting}
+          defaultValue=""
+          disabled={isPending}
         />
       </div>
 
-      {error ? <p className="notice">{error}</p> : null}
+      {message ? <p className="notice">{message}</p> : null}
 
-      <button type="submit" className="primary" disabled={submitting}>
-        {submitting ? 'Signing In...' : 'Sign In'}
+      <button type="submit" className="primary" disabled={isPending}>
+        {isPending ? 'Signing In...' : 'Sign In'}
       </button>
     </form>
   )
