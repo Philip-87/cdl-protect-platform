@@ -8,12 +8,6 @@ function copyResponseCookies(from: NextResponse, to: NextResponse) {
   })
 }
 
-function hasSupabaseAuthCookie(request: NextRequest) {
-  return request.cookies
-    .getAll()
-    .some((cookie) => /^sb-.*-auth-token(?:\.\d+)?$/i.test(cookie.name))
-}
-
 export { isPublicRoute }
 
 export async function proxy(request: NextRequest) {
@@ -73,25 +67,6 @@ export async function proxy(request: NextRequest) {
     session = data.session
   } catch (error) {
     console.error('Error getting session:', error)
-  }
-
-  const hasAuthCookie = hasSupabaseAuthCookie(request)
-
-  if (!session && !hasAuthCookie && !isPublicRoute(pathname)) {
-    const url = request.nextUrl.clone()
-    if (pathname.startsWith('/attorney')) {
-      url.pathname = '/attorney/login'
-    } else if (pathname.startsWith('/admin')) {
-      url.pathname = '/admin/login'
-    } else {
-      url.pathname = '/login'
-    }
-    if (pathname !== '/') {
-      url.searchParams.set('redirectedFrom', pathname)
-    }
-    const redirectResponse = NextResponse.redirect(url)
-    copyResponseCookies(response, redirectResponse)
-    return redirectResponse
   }
 
   if (
