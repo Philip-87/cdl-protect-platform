@@ -13,6 +13,7 @@ import { claimRoleInvitesSafe } from '@/app/lib/server/claim-invites'
 import { hydrateCaseDriverNames } from '@/app/lib/server/case-driver-display'
 import { getAccessibleFleetOptions, getFleetRowsByIds } from '@/app/lib/server/fleet-access'
 import { getEnabledFeaturesForRole, loadRoleFeatureOverrides } from '@/app/lib/server/role-features'
+import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
 import { createClient } from '@/app/lib/supabase/server'
 import {
   acceptCaseOffer,
@@ -208,9 +209,7 @@ export default async function DashboardPage({
   const workspaceTab = String(params?.tab ?? '').trim().toLowerCase()
   const isCasesView = workspaceTab === 'cases'
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getServerAuthUser(supabase)
 
   if (!user) {
     redirect('/login?message=Your%20session%20expired.%20Please%20sign%20in%20again.')

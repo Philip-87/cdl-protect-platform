@@ -12,6 +12,7 @@ import {
 } from '@/app/lib/server/fleet-access'
 import { claimRoleInvitesSafe } from '@/app/lib/server/claim-invites'
 import { getEnabledFeaturesForRole, hasPlatformFeature, loadRoleFeatureOverrides } from '@/app/lib/server/role-features'
+import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
 import { createClient } from '@/app/lib/supabase/server'
 import { archiveFleet, createFleet, sendRoleInvite, updateFleet } from '@/app/dashboard/actions'
 import {
@@ -192,9 +193,7 @@ export default async function MyFleetsPage({
   const editFleetId = String(params?.edit ?? '').trim()
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getServerAuthUser(supabase)
 
   if (!user) {
     redirect('/login?message=Please%20sign%20in%20again.')

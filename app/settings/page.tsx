@@ -3,6 +3,7 @@ import { AgencyWorkspaceLayout } from '@/app/components/AgencyWorkspaceLayout'
 import { getAccessibleFleetRows } from '@/app/lib/server/fleet-access'
 import { getEnabledFeaturesForRole, loadRoleFeatureOverrides } from '@/app/lib/server/role-features'
 import type { PlatformRole } from '@/app/lib/roles'
+import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
 import { createClient } from '@/app/lib/supabase/server'
 import { isAttorneyRole, normalizePlatformRole, roleHasFleetWorkspace } from '@/app/lib/roles'
 
@@ -53,9 +54,7 @@ function resolveSettingsRole(params: {
 
 export default async function SettingsPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getServerAuthUser(supabase)
 
   if (!user) {
     redirect('/login?message=Please%20sign%20in%20again.')

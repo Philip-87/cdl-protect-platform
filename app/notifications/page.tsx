@@ -6,6 +6,7 @@ import { markWorkspaceNotificationRead } from '@/app/dashboard/actions'
 import { claimRoleInvitesSafe } from '@/app/lib/server/claim-invites'
 import { getEnabledFeaturesForRole, hasPlatformFeature, loadRoleFeatureOverrides } from '@/app/lib/server/role-features'
 import { isAttorneyRole, normalizePlatformRole } from '@/app/lib/roles'
+import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
 import { createClient } from '@/app/lib/supabase/server'
 
 type NotificationRow = {
@@ -31,9 +32,7 @@ export default async function NotificationsPage({
   noStore()
   const params = await searchParams
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getServerAuthUser(supabase)
 
   if (!user) {
     redirect('/login?message=Please%20sign%20in%20again.')

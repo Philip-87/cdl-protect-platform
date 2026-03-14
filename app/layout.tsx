@@ -6,6 +6,7 @@ import { getAttorneyWorkspaceSummary } from '@/app/attorney/lib/workspace'
 import { getCalendarIntegrationOverview } from '@/app/lib/server/calendar-sync'
 import { claimRoleInvitesSafe } from '@/app/lib/server/claim-invites'
 import { getEnabledFeaturesForRole, hasPlatformFeature, loadRoleFeatureOverrides } from '@/app/lib/server/role-features'
+import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
 import { createClient } from '@/app/lib/supabase/server'
 import { isAttorneyRole, normalizePlatformRole } from '@/app/lib/roles'
 import { syncProfileRoleFromMetadata } from '@/app/lib/server/profile-role-sync'
@@ -19,9 +20,7 @@ export const metadata: Metadata = {
 async function resolveViewer() {
   try {
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const user = await getServerAuthUser(supabase)
 
     if (!user) return null
     await syncProfileRoleFromMetadata(user)
