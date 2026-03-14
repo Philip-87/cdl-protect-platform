@@ -1,6 +1,7 @@
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { applyServerStorage, createStorageFromOptions } from '@supabase/ssr/dist/main/cookies'
 
 type LoginPayload = {
   email: string
@@ -88,6 +89,23 @@ function applyCookies(
   return response
 }
 
+function createResponseCookieBuffer() {
+  const responseCookies: Array<{
+    name: string
+    value: string
+    options?: Parameters<NextResponse['cookies']['set']>[2]
+  }> = []
+
+  return {
+    responseCookies,
+    setAll(nextCookies: Array<{ name: string; value: string; options?: Parameters<NextResponse['cookies']['set']>[2] }>) {
+      nextCookies.forEach(({ name, value, options }) => {
+        responseCookies.push({ name, value, options })
+      })
+    },
+  }
+}
+
 export async function POST(request: Request) {
   const mode = getRequestMode(request)
   const requestUrl = new URL(request.url)
@@ -138,22 +156,37 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies()
-    const responseCookies: Array<{
-      name: string
-      value: string
-      options?: Parameters<NextResponse['cookies']['set']>[2]
-    }> = []
+    const buffered = createResponseCookieBuffer()
 
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
+    const storageState = createStorageFromOptions(
+      {
+        cookieEncoding: 'base64url',
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(nextCookies) {
+            nextCookies.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+            buffered.setAll(nextCookies)
+          },
         },
-        setAll(nextCookies) {
-          nextCookies.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-            responseCookies.push({ name, value, options })
-          })
+      },
+      true
+    )
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        flowType: 'pkce',
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        persistSession: true,
+        storage: storageState.storage,
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'cdl-protect/auth-login-route',
         },
       },
     })
@@ -175,17 +208,30 @@ export async function POST(request: Request) {
       return NextResponse.redirect(redirectUrl, 303)
     }
 
+    await applyServerStorage(
+      {
+        getAll: storageState.getAll,
+        setAll: storageState.setAll,
+        setItems: storageState.setItems,
+        removedItems: storageState.removedItems,
+      },
+      {
+        cookieEncoding: 'base64url',
+        cookieOptions: null,
+      }
+    )
+
     if (mode === 'json') {
       return applyCookies(
         NextResponse.json({
           ok: true,
           redirectTo: redirectedFrom,
         }),
-        responseCookies
+        buffered.responseCookies
       )
     }
 
-    return applyCookies(NextResponse.redirect(new URL(redirectedFrom, requestUrl), 303), responseCookies)
+    return applyCookies(NextResponse.redirect(new URL(redirectedFrom, requestUrl), 303), buffered.responseCookies)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to sign in right now.'
     if (mode === 'json') {
