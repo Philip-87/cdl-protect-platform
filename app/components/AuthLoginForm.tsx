@@ -11,16 +11,18 @@ function getSafeRedirectPath(rawPath: string) {
 }
 
 export default function AuthLoginForm({
+  action,
   redirectedFrom,
   prefillEmail = '',
   emailPlaceholder,
 }: {
+  action: (formData: FormData) => void | Promise<void>
   redirectedFrom: string
   prefillEmail?: string
   emailPlaceholder: string
 }) {
   return (
-    <form action="/api/auth/login" method="post" className="form-grid">
+    <form action={action} className="form-grid">
       <input type="hidden" name="redirectedFrom" value={getSafeRedirectPath(redirectedFrom || '/dashboard')} />
 
       <div>
