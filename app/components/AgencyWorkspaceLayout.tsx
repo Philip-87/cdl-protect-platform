@@ -3,13 +3,14 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
+import { SignOutForm } from '@/app/components/SignOutForm'
 import { hasPlatformFeature } from '@/app/lib/server/role-features'
 import { isStaffRole, roleCanCreateFleet, roleCanInvite, roleHasFleetWorkspace, type PlatformRole } from '@/app/lib/roles'
 
 type AgencyWorkspaceKey = 'overview' | 'cases' | 'fleets' | 'notifications' | 'intake' | 'settings'
 
 type SidebarLink = {
-  key: AgencyWorkspaceKey | 'create-fleet' | 'invite' | 'admin' | 'logout'
+  key: AgencyWorkspaceKey | 'create-fleet' | 'invite' | 'admin'
   href: string
   label: string
   icon: ReactNode
@@ -144,7 +145,6 @@ function WorkspaceSidebarPanel({
   const secondaryLinks: SidebarLink[] = [
     { key: 'settings', href: '/settings', label: 'Settings', icon: <SettingsIcon /> },
     ...(isStaffRole(role) ? [{ key: 'admin' as const, href: '/admin/dashboard', label: 'Admin Portal', icon: <AdminIcon /> }] : []),
-    { key: 'logout', href: '/logout', label: 'Sign Out', icon: <SignOutIcon /> },
   ]
 
   return (
@@ -181,6 +181,12 @@ function WorkspaceSidebarPanel({
           {secondaryLinks.map((item) => (
             <SidebarLinkItem key={item.key} item={item} active={item.key === active} onNavigate={onNavigate} />
           ))}
+          <SignOutForm className="workspace-nav-link" onClick={onNavigate}>
+            <span className="workspace-nav-icon">
+              <SignOutIcon />
+            </span>
+            <span>Sign Out</span>
+          </SignOutForm>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { SignOutForm } from '@/app/components/SignOutForm'
 import { isStaffRole, normalizePlatformRole } from '@/app/lib/roles'
 import { createClient } from '@/app/lib/supabase/server'
 import { AdminMenu } from '../_components/AdminMenu'
@@ -133,9 +134,7 @@ export default async function AdminPlatformLogsPage({
           <Link href="/admin/dashboard" className="button-link secondary">
             Back to Overview
           </Link>
-          <Link href="/logout" className="button-link secondary">
-            Sign Out
-          </Link>
+          <SignOutForm className="button-link secondary">Sign Out</SignOutForm>
         </div>
       </section>
 
@@ -249,4 +248,3 @@ export default async function AdminPlatformLogsPage({
     </div>
   )
 }
-

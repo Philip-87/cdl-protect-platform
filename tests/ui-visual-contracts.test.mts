@@ -118,3 +118,16 @@ test('admin users page keeps platform role feature controls available', () => {
   assert.match(source, /Save \{roleOption\} Controls/)
   assert.match(source, /Role Controls/)
 })
+
+test('logout remains an explicit form submit and is not linked for prefetch', () => {
+  const topNav = readSource('app/components/AppTopNav.tsx')
+  const agencyLayout = readSource('app/components/AgencyWorkspaceLayout.tsx')
+  const attorneyLayout = readSource('app/attorney/components/AttorneyWorkspaceLayout.tsx')
+  const logoutRoute = readSource('app/logout/route.ts')
+
+  assert.equal(topNav.includes('href="/logout"'), false)
+  assert.equal(agencyLayout.includes("href: '/logout'"), false)
+  assert.equal(attorneyLayout.includes("href: '/logout'"), false)
+  assert.match(logoutRoute, /export async function POST/)
+  assert.match(logoutRoute, /status:\s*405/)
+})

@@ -299,16 +299,24 @@ textarea:focus-visible {
   gap: 4px;
 }
 
+.user-menu-panel form {
+  margin: 0;
+}
+
 .user-menu-item {
   display: flex;
   align-items: center;
   min-height: 40px;
   padding: 0 12px;
   border-radius: 10px;
+  border: 0;
+  background: transparent;
   text-decoration: none;
   color: var(--ink);
   font-size: 0.9rem;
   font-weight: 700;
+  width: 100%;
+  cursor: pointer;
 }
 
 .user-menu-item:hover {
@@ -615,6 +623,10 @@ button.ghost,
   gap: 6px;
 }
 
+.workspace-sidebar-links form {
+  margin: 0;
+}
+
 .workspace-nav-link {
   display: flex;
   align-items: center;
@@ -628,6 +640,8 @@ button.ghost,
   color: var(--ink);
   font-size: 0.92rem;
   font-weight: 700;
+  width: 100%;
+  cursor: pointer;
 }
 
 .workspace-nav-link:hover {

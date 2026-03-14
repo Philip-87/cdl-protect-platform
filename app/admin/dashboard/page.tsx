@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { SignOutForm } from '@/app/components/SignOutForm'
 import { CASE_STATUSES } from '@/app/lib/case-status'
 import { getCaseDisplayDriverName } from '@/app/lib/cases/display'
 import { isStaffRole, normalizePlatformRole } from '@/app/lib/roles'
@@ -398,9 +399,7 @@ export default async function AdminDashboardPage({
           <Link href="/attorney/dashboard" className="button-link secondary">
             Attorney Portal
           </Link>
-          <Link href="/logout" className="button-link secondary">
-            Sign Out
-          </Link>
+          <SignOutForm className="button-link secondary">Sign Out</SignOutForm>
         </div>
       </section>
 

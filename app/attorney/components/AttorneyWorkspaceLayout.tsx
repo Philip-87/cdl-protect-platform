@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
+import { SignOutForm } from '@/app/components/SignOutForm'
 
 export type AttorneyWorkspaceKey =
   | 'dashboard'
@@ -19,7 +20,7 @@ export type AttorneyWorkspaceKey =
   | 'onboarding'
 
 type SidebarLink = {
-  key: AttorneyWorkspaceKey | 'logout'
+  key: AttorneyWorkspaceKey
   href: string
   label: string
   icon: ReactNode
@@ -191,7 +192,6 @@ function AttorneySidebarPanel({
   const adminLinks: SidebarLink[] = [
     { key: 'billing', href: '/attorney/billing', label: 'Billing', icon: <BillingIcon /> },
     { key: 'settings', href: '/attorney/settings', label: 'Settings', icon: <SettingsIcon /> },
-    { key: 'logout', href: '/logout', label: 'Sign Out', icon: <SignOutIcon /> },
   ]
 
   return (
@@ -237,6 +237,12 @@ function AttorneySidebarPanel({
           {adminLinks.map((item) => (
             <SidebarLinkItem key={item.key} item={item} active={item.key === active} onNavigate={onNavigate} />
           ))}
+          <SignOutForm className="workspace-nav-link" onClick={onNavigate}>
+            <span className="workspace-nav-icon">
+              <SignOutIcon />
+            </span>
+            <span>Sign Out</span>
+          </SignOutForm>
         </div>
       </div>
 

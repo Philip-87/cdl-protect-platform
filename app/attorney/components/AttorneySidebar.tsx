@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SignOutForm } from '@/app/components/SignOutForm'
 
 type AttorneySidebarProps = {
   active:
@@ -55,9 +56,7 @@ export default function AttorneySidebar({ active }: AttorneySidebarProps) {
         <Link href="/attorney/onboarding" className={`button-link ${isActive('onboarding')}`}>
           Onboarding
         </Link>
-        <Link href="/logout" className="button-link secondary">
-          Sign Out
-        </Link>
+        <SignOutForm className="button-link secondary">Sign Out</SignOutForm>
       </nav>
     </aside>
   )

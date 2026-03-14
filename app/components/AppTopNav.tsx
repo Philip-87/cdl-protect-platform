@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { SignOutForm } from '@/app/components/SignOutForm'
 import ThemeToggle from '@/app/components/ThemeToggle'
 import { hasPlatformFeature } from '@/app/lib/server/role-features'
 import { isAttorneyRole, isStaffRole, roleCanCreateFleet, roleHasFleetWorkspace, type PlatformRole } from '@/app/lib/roles'
@@ -221,9 +222,9 @@ export default function AppTopNav({ viewer }: { viewer: Viewer | null }) {
                 <Link href={billingHref} className="user-menu-item">
                   Billing
                 </Link>
-                <Link href="/logout" className="user-menu-item danger">
+                <SignOutForm className="user-menu-item danger">
                   Sign Out
-                </Link>
+                </SignOutForm>
               </div>
             </details>
           ) : null}
