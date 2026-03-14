@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import AuthLoginForm from '@/app/components/AuthLoginForm'
-import { login } from '@/app/login/actions'
 import { getAuthenticatedLandingPath } from '@/app/lib/server/auth-landing'
 import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
 import { createClient } from '@/app/lib/supabase/server'
@@ -41,7 +40,7 @@ export default async function AdminLoginPage({
         ) : null}
         {params?.message ? <p className="notice">{params.message}</p> : null}
 
-        <AuthLoginForm action={login} redirectedFrom={redirectedFrom} emailPlaceholder="admin@cdlprotect.com" />
+        <AuthLoginForm redirectedFrom={redirectedFrom} emailPlaceholder="admin@cdlprotect.com" />
 
         <p style={{ margin: '14px 0 0 0', fontSize: 14 }}>
           Need access? Contact your platform owner.
