@@ -1,5 +1,9 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import AuthLoginForm from '@/app/components/AuthLoginForm'
+import { getAuthenticatedLandingPath } from '@/app/lib/server/auth-landing'
+import { getServerAuthUser } from '@/app/lib/supabase/auth-user'
+import { createClient } from '@/app/lib/supabase/server'
 
 export default async function AdminLoginPage({
   searchParams,
@@ -7,6 +11,12 @@ export default async function AdminLoginPage({
   searchParams: Promise<{ message?: string; redirectedFrom?: string }>
 }) {
   const params = await searchParams
+  const supabase = await createClient()
+  const user = await getServerAuthUser(supabase)
+  if (user) {
+    redirect(await getAuthenticatedLandingPath(supabase, user.id))
+  }
+
   const redirectedFrom = params?.redirectedFrom?.trim() || '/admin/dashboard'
 
   return (
